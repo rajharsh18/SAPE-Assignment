@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:18.2
+    container_name: sape-postgres-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ../data/postgres:/var/lib/postgresql
+    ports:
+      - "5400:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:8.2.4-alpine
+    container_name: sape-redis
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: samayak-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      NODE_ENV: production
+      UPLOAD_DIR: /data/samayak-uploads
+    volumes:
+      - ../data/uploads:/data/samayak-uploads
+    ports:
+      - "0.0.0.0:3000:3000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: samayak-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    volumes:
+      - ../data/uploads:/data/samayak-uploads
+
+  bull-board:
+    image: deadly0/bull-board:latest
+    container_name: sape-bull-board
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: sape-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USE_TLS: "false"
+      REDIS_DB: 0
+      NODE_ENV: production
+    ports:
+      - "0.0.0.0:3001:3000"
+
+volumes:
+  redis_data:
+
+networks:
+  default:
+    name: sape-assignment
