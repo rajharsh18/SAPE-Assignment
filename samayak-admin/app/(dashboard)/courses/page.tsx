@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Upload, Pencil, Trash2, AlertTriangle, Filter } from "lucide-react";
+import {
+  Plus,
+  Upload,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+  Filter,
+} from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { toast } from "sonner";
-import { PageHeader, DataTable, Pagination, ScopeBanner } from "@/components/tables/DataTable";
+import {
+  PageHeader,
+  DataTable,
+  Pagination,
+  ScopeBanner,
+} from "@/components/tables/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
@@ -25,7 +37,12 @@ interface FlatCourse {
   name: string;
   credits: number;
   type: string;
-  branch: { name: string; code: string; semester: number; section: string | null };
+  branch: {
+    name: string;
+    code: string;
+    semester: number;
+    section: string | null;
+  };
   _count: { slots: number };
   grouped?: false;
 }
@@ -60,20 +77,44 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<CourseRow[]>([]);
   const [grouped, setGrouped] = useState(true);
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [departments, setDepartments] = useState<Array<{ id: string; name: string; code: string }>>([]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
+  const [departments, setDepartments] = useState<
+    Array<{ id: string; name: string; code: string }>
+  >([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
   const [search, setSearch] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; code: string; name: string; credits: number; type: string } | null>(null);
-  const [form, setForm] = useState({ code: "", name: "", credits: "", type: "LECTURE", departmentId: "", branchId: "" });
+  const [editing, setEditing] = useState<{
+    id: string;
+    code: string;
+    name: string;
+    credits: number;
+    type: string;
+  } | null>(null);
+  const [form, setForm] = useState({
+    code: "",
+    name: "",
+    credits: "",
+    type: "LECTURE",
+    departmentId: "",
+    branchId: "",
+  });
   const [showImport, setShowImport] = useState(false);
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(pagination.page), limit: String(pagination.limit), search });
+    const params = new URLSearchParams({
+      page: String(pagination.page),
+      limit: String(pagination.limit),
+      search,
+    });
     if (selectedBranch) params.set("branchId", selectedBranch);
     if (selectedSemester) params.set("semester", selectedSemester);
     const res = await fetch(`/api/courses?${params}`);
@@ -84,7 +125,13 @@ export default function CoursesPage() {
       setPagination(data.pagination);
     }
     setLoading(false);
-  }, [pagination.page, pagination.limit, search, selectedBranch, selectedSemester]);
+  }, [
+    pagination.page,
+    pagination.limit,
+    search,
+    selectedBranch,
+    selectedSemester,
+  ]);
 
   const fetchBranches = useCallback(async () => {
     const res = await fetch("/api/departments?limit=100");
@@ -103,8 +150,12 @@ export default function CoursesPage() {
     }
   }, []);
 
-  useEffect(() => { fetchCourses(); }, [fetchCourses]);
-  useEffect(() => { fetchBranches(); }, [fetchBranches]);
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+  useEffect(() => {
+    fetchBranches();
+  }, [fetchBranches]);
 
   const handleSave = async () => {
     const method = editing ? "PUT" : "POST";
@@ -114,8 +165,11 @@ export default function CoursesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, credits: parseInt(form.credits) }),
     });
-    if (res.ok) { toast.success(editing ? "Course updated" : "Course created"); setShowModal(false); fetchCourses(); }
-    else toast.error((await res.json()).error || "Failed to save");
+    if (res.ok) {
+      toast.success(editing ? "Course updated" : "Course created");
+      setShowModal(false);
+      fetchCourses();
+    } else toast.error((await res.json()).error || "Failed to save");
   };
 
   const handleDelete = async (course: CourseRow) => {
@@ -126,10 +180,14 @@ export default function CoursesPage() {
     if (!confirm(`Delete ${label}?`)) return;
 
     const results = await Promise.all(
-      ids.map((id) => fetch(`/api/courses/${id}`, { method: "DELETE" }))
+      ids.map((id) => fetch(`/api/courses/${id}`, { method: "DELETE" })),
     );
     if (results.every((r) => r.ok)) {
-      toast.success(ids.length > 1 ? `Deleted ${ids.length} course entries` : "Course deleted");
+      toast.success(
+        ids.length > 1
+          ? `Deleted ${ids.length} course entries`
+          : "Course deleted",
+      );
       fetchCourses();
     } else {
       toast.error("Some deletions failed");
@@ -137,17 +195,26 @@ export default function CoursesPage() {
   };
 
   const handleImport = async (file: File) => {
-    const fd = new FormData(); fd.append("file", file);
-    const res = await fetch("/api/courses/import", { method: "POST", body: fd });
-    if (res.ok) { toast.success("Import queued"); setShowImport(false); setTimeout(fetchCourses, 2000); }
-    else toast.error("Import failed");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/courses/import", {
+      method: "POST",
+      body: fd,
+    });
+    if (res.ok) {
+      toast.success("Import queued");
+      setShowImport(false);
+      setTimeout(fetchCourses, 2000);
+    } else toast.error("Import failed");
   };
 
   const uniqueSemesters = [...new Set(branches.map((b) => b.semester))].sort();
   const selectedBranchObj = branches.find((b) => b.id === selectedBranch);
   const scopeText = selectedBranchObj
     ? `CSE / ${selectedBranchObj.code}${selectedBranchObj.section ? ` ${selectedBranchObj.section}` : ""} / Semester ${selectedBranchObj.semester}`
-    : selectedSemester ? `Semester ${selectedSemester}` : "All courses";
+    : selectedSemester
+      ? `Semester ${selectedSemester}`
+      : "All courses";
 
   const typeVariant = (type: string) => {
     if (type === "LECTURE") return "lecture" as const;
@@ -182,8 +249,28 @@ export default function CoursesPage() {
         description={`${pagination.total} courses`}
         actions={
           <>
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}><Upload size={14} /> Import</Button>
-            <Button size="sm" onClick={() => { setEditing(null); setForm({ code: "", name: "", credits: "", type: "LECTURE", departmentId: departments[0]?.id || "", branchId: branches[0]?.id || "" }); setShowModal(true); }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowImport(true)}
+            >
+              <Upload size={14} /> Import
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setForm({
+                  code: "",
+                  name: "",
+                  credits: "",
+                  type: "LECTURE",
+                  departmentId: departments[0]?.id || "",
+                  branchId: branches[0]?.id || "",
+                });
+                setShowModal(true);
+              }}
+            >
               <Plus size={14} /> Add Course
             </Button>
           </>
@@ -193,16 +280,33 @@ export default function CoursesPage() {
       <ScopeBanner label={scopeText} />
 
       <div className="flex flex-wrap gap-3 items-center">
-        <span className="flex items-center gap-1.5 text-sm text-text-secondary"><Filter size={14} /> Filters</span>
-        <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}
-          className="px-3.5 py-2 rounded-xl text-sm bg-surface-1 border border-border shadow-sm outline-none min-w-[160px] focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20">
+        <span className="flex items-center gap-1.5 text-sm text-text-secondary">
+          <Filter size={14} /> Filters
+        </span>
+        <select
+          value={selectedBranch}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+          className="px-3.5 py-2 rounded-xl text-sm bg-surface-1 border border-border shadow-sm outline-none min-w-[160px] focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20"
+        >
           <option value="">All Branches</option>
-          {branches.map((b) => <option key={b.id} value={b.id}>{b.code}{b.section ? ` ${b.section}` : ""} (Sem {b.semester})</option>)}
+          {branches.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.code}
+              {b.section ? ` ${b.section}` : ""} (Sem {b.semester})
+            </option>
+          ))}
         </select>
-        <select value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)}
-          className="px-3.5 py-2 rounded-xl text-sm bg-surface-1 border border-border shadow-sm outline-none min-w-[140px] focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20">
+        <select
+          value={selectedSemester}
+          onChange={(e) => setSelectedSemester(e.target.value)}
+          className="px-3.5 py-2 rounded-xl text-sm bg-surface-1 border border-border shadow-sm outline-none min-w-[140px] focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20"
+        >
           <option value="">All Semesters</option>
-          {uniqueSemesters.map((s) => <option key={s} value={String(s)}>Semester {s}</option>)}
+          {uniqueSemesters.map((s) => (
+            <option key={s} value={String(s)}>
+              Semester {s}
+            </option>
+          ))}
         </select>
         <SearchBar
           placeholder="Search courses..."
@@ -217,7 +321,11 @@ export default function CoursesPage() {
         data={courses}
         keyExtractor={(c) => (isGroupedCourse(c) ? c.code : c.id)}
         columns={[
-          { key: "code", header: "Code", render: (c) => <span className="font-semibold">{c.code}</span> },
+          {
+            key: "code",
+            header: "Code",
+            render: (c) => <span className="font-semibold">{c.code}</span>,
+          },
           { key: "name", header: "Name", render: (c) => c.name },
           {
             key: "branch",
@@ -230,12 +338,25 @@ export default function CoursesPage() {
               </span>
             ),
           },
-          { key: "type", header: "Type", render: (c) => <Badge variant={typeVariant(c.type)}>{c.type}</Badge> },
           {
-            key: "credits", header: "Credits", align: "center",
-            render: (c) => c.credits === 0 ? (
-              <Badge variant="warning"><AlertTriangle size={10} className="inline mr-1" />0</Badge>
-            ) : c.credits,
+            key: "type",
+            header: "Type",
+            render: (c) => (
+              <Badge variant={typeVariant(c.type)}>{c.type}</Badge>
+            ),
+          },
+          {
+            key: "credits",
+            header: "Credits",
+            align: "center",
+            render: (c) =>
+              c.credits === 0 ? (
+                <Badge variant="warning">
+                  <AlertTriangle size={10} className="inline mr-1" />0
+                </Badge>
+              ) : (
+                c.credits
+              ),
           },
           {
             key: "slots",
@@ -244,27 +365,56 @@ export default function CoursesPage() {
             render: (c) => (isGroupedCourse(c) ? c.totalSlots : c._count.slots),
           },
           {
-            key: "actions", header: "Actions", align: "right",
+            key: "actions",
+            header: "Actions",
+            align: "right",
             render: (c) => (
               <div className="flex gap-1 justify-end">
                 <IconButton onClick={() => openEdit(c)}>
                   <Pencil size={14} />
                 </IconButton>
-                <IconButton variant="danger" onClick={() => handleDelete(c)}><Trash2 size={14} /></IconButton>
+                <IconButton variant="danger" onClick={() => handleDelete(c)}>
+                  <Trash2 size={14} />
+                </IconButton>
               </div>
             ),
           },
         ]}
       />
-      <Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))} />
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+      />
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? "Edit Course" : "Add Course"}>
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title={editing ? "Edit Course" : "Add Course"}
+      >
         <div className="space-y-4">
-          <Input label="Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-          <Input label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <Input
+            label="Code"
+            value={form.code}
+            onChange={(e) => setForm({ ...form, code: e.target.value })}
+          />
+          <Input
+            label="Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Credits" type="number" value={form.credits} onChange={(e) => setForm({ ...form, credits: e.target.value })} />
-            <Select label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            <Input
+              label="Credits"
+              type="number"
+              value={form.credits}
+              onChange={(e) => setForm({ ...form, credits: e.target.value })}
+            />
+            <Select
+              label="Type"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+            >
               <option value="LECTURE">Lecture</option>
               <option value="LAB">Lab</option>
               <option value="TUTORIAL">Tutorial</option>
@@ -272,25 +422,54 @@ export default function CoursesPage() {
           </div>
           {!editing && (
             <>
-              <Select label="Department" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
-                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              <Select
+                label="Department"
+                value={form.departmentId}
+                onChange={(e) =>
+                  setForm({ ...form, departmentId: e.target.value })
+                }
+              >
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
               </Select>
-              <Select label="Branch" value={form.branchId} onChange={(e) => setForm({ ...form, branchId: e.target.value })}>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.code} Sem {b.semester}{b.section ? ` ${b.section}` : ""}</option>)}
+              <Select
+                label="Branch"
+                value={form.branchId}
+                onChange={(e) => setForm({ ...form, branchId: e.target.value })}
+              >
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.code} Sem {b.semester}
+                    {b.section ? ` ${b.section}` : ""}
+                  </option>
+                ))}
               </Select>
             </>
           )}
           {editing && grouped && (
             <p className="text-xs text-text-muted">
-              Editing applies to one branch entry. Use branch filter to edit a specific section.
+              Editing applies to one branch entry. Use branch filter to edit a
+              specific section.
             </p>
           )}
-          <Button onClick={handleSave} className="w-full justify-center">{editing ? "Update" : "Create"}</Button>
+          <Button onClick={handleSave} className="w-full justify-center">
+            {editing ? "Update" : "Create"}
+          </Button>
         </div>
       </Modal>
 
-      <Modal open={showImport} onClose={() => setShowImport(false)} title="Import Courses">
-        <BulkImport onUpload={handleImport} hint="Columns: code | name | credits | type | branchCode | semester" />
+      <Modal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="Import Courses"
+      >
+        <BulkImport
+          onUpload={handleImport}
+          hint="Columns: code | name | credits | type | branchCode | semester"
+        />
       </Modal>
     </div>
   );

@@ -17,7 +17,13 @@ import { ImportReport } from "@/components/import/BulkImport";
 import { notifyAnalyticsRefresh } from "@/lib/analytics-events";
 import { cn } from "@/lib/cn";
 
-type JobStatus = "QUEUED" | "PARSING" | "OCR_REVIEW" | "INTEGRATING" | "DONE" | "FAILED";
+type JobStatus =
+  | "QUEUED"
+  | "PARSING"
+  | "OCR_REVIEW"
+  | "INTEGRATING"
+  | "DONE"
+  | "FAILED";
 
 interface OcrPageSummary {
   pageNumber: number;
@@ -81,7 +87,11 @@ interface ProcessLogEntry {
 }
 
 function formatLogTime(date = new Date()) {
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function getJobProgress(data: JobData): number {
@@ -114,7 +124,10 @@ function getJobStatusLabel(data: JobData): string {
   return statusConfig[data.status].label;
 }
 
-function buildJobLogMessage(data: JobData, prev: JobData | null): string | null {
+function buildJobLogMessage(
+  data: JobData,
+  prev: JobData | null,
+): string | null {
   if (!prev || prev.status !== data.status) {
     switch (data.status) {
       case "QUEUED":
@@ -248,7 +261,9 @@ export default function PdfIngestionPage() {
             fetchQueue();
 
             if (data.status === "DONE") {
-              toast.success(`Imported ${data.createdCount} records — dashboard updating`);
+              toast.success(
+                `Imported ${data.createdCount} records — dashboard updating`,
+              );
               notifyAnalyticsRefresh();
             } else {
               toast.error(data.errors?.[0]?.reason || "PDF ingestion failed");
@@ -263,7 +278,7 @@ export default function PdfIngestionPage() {
         eventSource.close();
       };
     },
-    [fetchQueue, appendLog]
+    [fetchQueue, appendLog],
   );
 
   const uploadFile = useCallback(
@@ -281,14 +296,19 @@ export default function PdfIngestionPage() {
       setJobData(null);
       setShowOcrLog(false);
       setProcessLog([]);
-      appendLog(`Upload started — ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+      appendLog(
+        `Upload started — ${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+      );
 
       const formData = new FormData();
       formData.append("file", file);
 
       try {
         appendLog("Sending file to server…");
-        const res = await fetch("/api/pdf-ingestion/upload", { method: "POST", body: formData });
+        const res = await fetch("/api/pdf-ingestion/upload", {
+          method: "POST",
+          body: formData,
+        });
         if (!res.ok) {
           const err = (await res.json()).error || "Upload failed";
           appendLog(`Upload failed — ${err}`);
@@ -309,7 +329,7 @@ export default function PdfIngestionPage() {
         setUploading(false);
       }
     },
-    [subscribeToJob, fetchQueue, appendLog]
+    [subscribeToJob, fetchQueue, appendLog],
   );
 
   const handleDrop = (e: React.DragEvent) => {
@@ -352,7 +372,9 @@ export default function PdfIngestionPage() {
               <Layers size={18} className="text-brand-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-text-primary">Processing Queue</h3>
+              <h3 className="text-sm font-semibold text-text-primary">
+                Processing Queue
+              </h3>
               <p className="text-xs text-text-muted">
                 {queueLoading
                   ? "Loading..."
@@ -362,19 +384,45 @@ export default function PdfIngestionPage() {
               </p>
             </div>
           </div>
-          {queue?.bullMq && (queue.bullMq.waiting > 0 || queue.bullMq.active > 0) && (
-            <p className="text-[11px] text-text-muted">
-              Worker: {queue.bullMq.active} active · {queue.bullMq.waiting} waiting
-            </p>
-          )}
+          {queue?.bullMq &&
+            (queue.bullMq.waiting > 0 || queue.bullMq.active > 0) && (
+              <p className="text-[11px] text-text-muted">
+                Worker: {queue.bullMq.active} active · {queue.bullMq.waiting}{" "}
+                waiting
+              </p>
+            )}
         </div>
 
         {summary && summary.total > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {summary.queued > 0 && <QueueStatChip label="Queued" count={summary.queued} status="QUEUED" />}
-            {summary.parsing > 0 && <QueueStatChip label="Parsing" count={summary.parsing} status="PARSING" />}
-            {summary.processing > 0 && <QueueStatChip label="Processing" count={summary.processing} status="OCR_REVIEW" />}
-            {summary.integrating > 0 && <QueueStatChip label="Inserting" count={summary.integrating} status="INTEGRATING" />}
+            {summary.queued > 0 && (
+              <QueueStatChip
+                label="Queued"
+                count={summary.queued}
+                status="QUEUED"
+              />
+            )}
+            {summary.parsing > 0 && (
+              <QueueStatChip
+                label="Parsing"
+                count={summary.parsing}
+                status="PARSING"
+              />
+            )}
+            {summary.processing > 0 && (
+              <QueueStatChip
+                label="Processing"
+                count={summary.processing}
+                status="OCR_REVIEW"
+              />
+            )}
+            {summary.integrating > 0 && (
+              <QueueStatChip
+                label="Inserting"
+                count={summary.integrating}
+                status="INTEGRATING"
+              />
+            )}
           </div>
         )}
 
@@ -385,7 +433,10 @@ export default function PdfIngestionPage() {
             ))}
           </div>
         ) : queue && queue.active.length > 0 ? (
-          <ScrollArea maxHeight="min(280px, 35vh)" fade={queue.active.length > 3}>
+          <ScrollArea
+            maxHeight="min(280px, 35vh)"
+            fade={queue.active.length > 3}
+          >
             <div className="flex flex-col gap-2 p-1">
               {queue.active.map((job, index) => (
                 <QueueJobRow
@@ -401,7 +452,8 @@ export default function PdfIngestionPage() {
           <div className="flex items-center gap-3 py-6 px-4 rounded-xl bg-surface-2 border border-border/60">
             <Clock size={18} className="text-text-muted shrink-0" />
             <p className="text-sm text-text-muted">
-              Upload a timetable PDF to add it to the queue. Multiple files can be processed in order.
+              Upload a timetable PDF to add it to the queue. Multiple files can
+              be processed in order.
             </p>
           </div>
         )}
@@ -418,8 +470,10 @@ export default function PdfIngestionPage() {
         onClick={handleFileSelect}
         className={cn(
           "border-2 border-dashed rounded-[20px] p-12 text-center cursor-pointer transition-all bg-surface-1 shadow-sm border-border/60",
-          dragOver ? "border-brand-secondary bg-brand-secondary/5" : "hover:border-brand-primary/30",
-          uploading && "opacity-60 cursor-not-allowed"
+          dragOver
+            ? "border-brand-secondary bg-brand-secondary/5"
+            : "hover:border-brand-primary/30",
+          uploading && "opacity-60 cursor-not-allowed",
         )}
       >
         <div className="w-16 h-16 rounded-xl bg-brand-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -433,14 +487,17 @@ export default function PdfIngestionPage() {
           {uploading ? "Uploading..." : "Drop your timetable PDF here"}
         </p>
         <p className="text-sm text-text-secondary mt-1.5">
-          Image PDFs → Tesseract OCR → auto-insert • Text PDFs import directly • Max 10MB
+          Image PDFs → Tesseract OCR → auto-insert • Text PDFs import directly •
+          Max 10MB
         </p>
       </div>
 
       {/* Active job detail (tracked via SSE) */}
       {jobData && (
         <Card padding="md" className="animate-fade-in">
-          <p className="text-xs font-medium text-text-muted uppercase tracking-wide mb-3">Current Upload</p>
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wide mb-3">
+            Current Upload
+          </p>
           <div className="flex items-center gap-3 mb-5">
             <div className={cn("shrink-0", statusIconClass[jobData.status])}>
               {isActive ? (
@@ -476,42 +533,49 @@ export default function PdfIngestionPage() {
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-500",
-                jobData.status === "FAILED" ? "bg-danger" : "brand-gradient"
+                jobData.status === "FAILED" ? "bg-danger" : "brand-gradient",
               )}
               style={{ width: `${jobProgress}%` }}
             />
           </div>
 
           <div className="flex justify-between mb-4">
-            {(["QUEUED", "PARSING", "INTEGRATING", "DONE"] as JobStatus[]).map((step, idx) => {
-              const sc = statusConfig[step];
-              const isStepActive =
-                step === jobData.status ||
-                (step === "PARSING" && jobData.status === "OCR_REVIEW");
-              const isPast = jobProgress > sc.progress;
-              return (
-                <div key={step} className="flex flex-col items-center gap-1.5 flex-1">
+            {(["QUEUED", "PARSING", "INTEGRATING", "DONE"] as JobStatus[]).map(
+              (step, idx) => {
+                const sc = statusConfig[step];
+                const isStepActive =
+                  step === jobData.status ||
+                  (step === "PARSING" && jobData.status === "OCR_REVIEW");
+                const isPast = jobProgress > sc.progress;
+                return (
                   <div
-                    className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold",
-                      isPast || isStepActive
-                        ? "bg-brand-primary/15 text-brand-primary"
-                        : "bg-surface-3 text-text-muted"
-                    )}
+                    key={step}
+                    className="flex flex-col items-center gap-1.5 flex-1"
                   >
-                    {isPast ? <CheckCircle size={16} /> : idx + 1}
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold",
+                        isPast || isStepActive
+                          ? "bg-brand-primary/15 text-brand-primary"
+                          : "bg-surface-3 text-text-muted",
+                      )}
+                    >
+                      {isPast ? <CheckCircle size={16} /> : idx + 1}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[11px] text-center",
+                        isStepActive
+                          ? "text-brand-primary font-semibold"
+                          : "text-text-muted",
+                      )}
+                    >
+                      {sc.label}
+                    </span>
                   </div>
-                  <span
-                    className={cn(
-                      "text-[11px] text-center",
-                      isStepActive ? "text-brand-primary font-semibold" : "text-text-muted"
-                    )}
-                  >
-                    {sc.label}
-                  </span>
-                </div>
-              );
-            })}
+                );
+              },
+            )}
           </div>
 
           {ocrPages.length > 0 && (
@@ -524,18 +588,33 @@ export default function PdfIngestionPage() {
                 {showOcrLog ? "Hide" : "Show"} OCR log ({ocrPages.length} pages)
               </button>
               {showOcrLog && (
-                <ScrollArea maxHeight={192} fade={ocrPages.length > 4} className="mt-2">
+                <ScrollArea
+                  maxHeight={192}
+                  fade={ocrPages.length > 4}
+                  className="mt-2"
+                >
                   <div className="flex flex-col gap-1.5 p-1">
-                  {ocrPages.map((p) => (
-                    <div key={p.pageNumber} className="text-[11px] p-2 rounded-lg bg-surface-2 font-mono">
-                      <span className="font-semibold text-text-primary">Page {p.pageNumber}</span>
-                      {p.branch && <span className="text-brand-primary ml-2">{p.branch}</span>}
-                      <span className="text-text-muted ml-2">
-                        {p.slotsFound} slots • {p.coursesFound} courses
-                      </span>
-                      <p className="text-text-secondary mt-1 line-clamp-2">{p.preview}</p>
-                    </div>
-                  ))}
+                    {ocrPages.map((p) => (
+                      <div
+                        key={p.pageNumber}
+                        className="text-[11px] p-2 rounded-lg bg-surface-2 font-mono"
+                      >
+                        <span className="font-semibold text-text-primary">
+                          Page {p.pageNumber}
+                        </span>
+                        {p.branch && (
+                          <span className="text-brand-primary ml-2">
+                            {p.branch}
+                          </span>
+                        )}
+                        <span className="text-text-muted ml-2">
+                          {p.slotsFound} slots • {p.coursesFound} courses
+                        </span>
+                        <p className="text-text-secondary mt-1 line-clamp-2">
+                          {p.preview}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </ScrollArea>
               )}
@@ -550,9 +629,16 @@ export default function PdfIngestionPage() {
               <ScrollArea maxHeight={160} fade={processLog.length > 5}>
                 <div className="flex flex-col gap-1 p-1 rounded-xl bg-surface-2 border border-border/50 font-mono text-[11px]">
                   {processLog.map((entry, i) => (
-                    <div key={`${entry.time}-${i}`} className="flex gap-2 px-2 py-1">
-                      <span className="text-text-muted shrink-0">{entry.time}</span>
-                      <span className="text-text-secondary">{entry.message}</span>
+                    <div
+                      key={`${entry.time}-${i}`}
+                      className="flex gap-2 px-2 py-1"
+                    >
+                      <span className="text-text-muted shrink-0">
+                        {entry.time}
+                      </span>
+                      <span className="text-text-secondary">
+                        {entry.message}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -574,31 +660,41 @@ export default function PdfIngestionPage() {
       {recentJobs.length > 0 && (
         <Card padding="md">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h3 className="text-sm font-semibold text-text-primary">Recent Imports</h3>
-            <span className="text-xs text-text-muted">{recentJobs.length} shown · scroll for more</span>
+            <h3 className="text-sm font-semibold text-text-primary">
+              Recent Imports
+            </h3>
+            <span className="text-xs text-text-muted">
+              {recentJobs.length} shown · scroll for more
+            </span>
           </div>
           <ScrollArea maxHeight="min(320px, 40vh)" fade={recentJobs.length > 4}>
             <div className="flex flex-col gap-2 p-1">
-            {recentJobs.map((job) => (
-              <div
-                key={job.jobId}
-                className="flex items-center gap-3 p-3 rounded-xl bg-surface-2 border border-border/40"
-              >
-                <div className={statusIconClass[job.status]}>
-                  {job.status === "DONE" ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+              {recentJobs.map((job) => (
+                <div
+                  key={job.jobId}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-surface-2 border border-border/40"
+                >
+                  <div className={statusIconClass[job.status]}>
+                    {job.status === "DONE" ? (
+                      <CheckCircle size={16} />
+                    ) : (
+                      <AlertCircle size={16} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {job.fileName}
+                    </p>
+                    <p className="text-[11px] text-text-muted">
+                      Created: {job.createdCount} • Matched: {job.matchedCount}{" "}
+                      • Failed: {job.failedCount}
+                      <span className="mx-1.5">·</span>
+                      {new Date(job.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <StatusBadge status={job.status} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{job.fileName}</p>
-                  <p className="text-[11px] text-text-muted">
-                    Created: {job.createdCount} • Matched: {job.matchedCount} • Failed:{" "}
-                    {job.failedCount}
-                    <span className="mx-1.5">·</span>
-                    {new Date(job.updatedAt).toLocaleString()}
-                  </p>
-                </div>
-                <StatusBadge status={job.status} />
-              </div>
-            ))}
+              ))}
             </div>
           </ScrollArea>
         </Card>
@@ -620,10 +716,12 @@ function QueueStatChip({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
-        statusChipClass[status]
+        statusChipClass[status],
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", statusDotClass[status])} />
+      <span
+        className={cn("h-1.5 w-1.5 rounded-full", statusDotClass[status])}
+      />
       {count} {label}
     </span>
   );
@@ -647,7 +745,7 @@ function QueueJobRow({
         "flex items-center gap-3 p-3 rounded-xl border transition-colors",
         highlighted
           ? "bg-brand-primary/6 border-brand-primary/25"
-          : "bg-surface-2 border-border/40"
+          : "bg-surface-2 border-border/40",
       )}
     >
       <div className="w-7 h-7 rounded-lg bg-surface-1 border border-border flex items-center justify-center text-xs font-bold text-text-muted shrink-0">
@@ -655,7 +753,9 @@ function QueueJobRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate text-text-primary">{job.fileName}</p>
+        <p className="text-sm font-medium truncate text-text-primary">
+          {job.fileName}
+        </p>
         <p className="text-[11px] text-text-muted">
           Added {new Date(job.createdAt).toLocaleTimeString()}
           {job.status === "PARSING" && job.ocrProgress && (
@@ -667,7 +767,9 @@ function QueueJobRow({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        {isRunning && <Loader2 size={14} className="animate-spin text-brand-primary" />}
+        {isRunning && (
+          <Loader2 size={14} className="animate-spin text-brand-primary" />
+        )}
         <StatusBadge status={job.status} />
       </div>
     </div>
@@ -679,7 +781,7 @@ function StatusBadge({ status }: { status: JobStatus }) {
     <span
       className={cn(
         "whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-        statusChipClass[status]
+        statusChipClass[status],
       )}
     >
       {statusConfig[status].label}

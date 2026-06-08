@@ -15,10 +15,11 @@ export function IconButton({
     <button
       className={cn(
         "p-2 rounded-[10px] border-none bg-transparent cursor-pointer transition-colors",
-        variant === "default" && "text-text-secondary hover:text-text-primary hover:bg-surface-3",
+        variant === "default" &&
+          "text-text-secondary hover:text-text-primary hover:bg-surface-3",
         variant === "danger" && "text-danger hover:bg-danger/10",
         variant === "success" && "text-success hover:bg-success/10",
-        className
+        className,
       )}
       {...props}
     >

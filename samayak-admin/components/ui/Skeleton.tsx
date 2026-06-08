@@ -6,10 +6,18 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className, height = "20px" }: SkeletonProps) {
-  return <div className={cn("skeleton w-full", className)} style={{ height }} />;
+  return (
+    <div className={cn("skeleton w-full", className)} style={{ height }} />
+  );
 }
 
-export function TableSkeleton({ rows = 5, cols = 5 }: { rows?: number; cols?: number }) {
+export function TableSkeleton({
+  rows = 5,
+  cols = 5,
+}: {
+  rows?: number;
+  cols?: number;
+}) {
   return (
     <>
       {Array.from({ length: rows }).map((_, i) => (

@@ -57,7 +57,8 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)",
+        background:
+          "linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)",
         position: "relative",
         overflow: "hidden",
       }}
@@ -71,7 +72,8 @@ export default function LoginPage() {
           width: "600px",
           height: "600px",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(61, 161, 255, 0.15) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(61, 161, 255, 0.15) 0%, transparent 70%)",
           filter: "blur(60px)",
         }}
       />
@@ -83,7 +85,8 @@ export default function LoginPage() {
           width: "500px",
           height: "500px",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(37, 97, 153, 0.2) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(37, 97, 153, 0.2) 0%, transparent 70%)",
           filter: "blur(60px)",
         }}
       />
@@ -192,9 +195,7 @@ export default function LoginPage() {
                   outline: "none",
                   transition: "border-color 0.2s",
                 }}
-                onFocus={(e) =>
-                  (e.target.style.borderColor = "#3DA1FF")
-                }
+                onFocus={(e) => (e.target.style.borderColor = "#3DA1FF")}
                 onBlur={(e) =>
                   (e.target.style.borderColor = "rgba(255,255,255,0.15)")
                 }
@@ -232,9 +233,7 @@ export default function LoginPage() {
                   outline: "none",
                   transition: "border-color 0.2s",
                 }}
-                onFocus={(e) =>
-                  (e.target.style.borderColor = "#3DA1FF")
-                }
+                onFocus={(e) => (e.target.style.borderColor = "#3DA1FF")}
                 onBlur={(e) =>
                   (e.target.style.borderColor = "rgba(255,255,255,0.15)")
                 }
@@ -293,9 +292,7 @@ export default function LoginPage() {
                 background: "rgba(255,255,255,0.1)",
               }}
             />
-            <span
-              style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}
-            >
+            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
               OR
             </span>
             <div

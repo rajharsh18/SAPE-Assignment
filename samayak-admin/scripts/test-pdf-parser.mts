@@ -33,7 +33,9 @@ async function main() {
 
   if (result.slots.length === 0 && result.courses.length === 0) {
     console.error("\nFAIL: No timetable data extracted.");
-    console.error("Ensure poppler-utils is installed and GROQ_API_KEY is set (Docker worker has both).");
+    console.error(
+      "Ensure poppler-utils is installed and GROQ_API_KEY is set (Docker worker has both).",
+    );
     process.exit(1);
   }
 

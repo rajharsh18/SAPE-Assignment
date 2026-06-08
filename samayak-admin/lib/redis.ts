@@ -22,7 +22,7 @@ function createRedisClient(): IORedis {
   client.on("error", (err) => {
     console.error(
       `[redis] connection error (node=${process.env.WS_NODE_ID}):`,
-      err.message
+      err.message,
     );
   });
 

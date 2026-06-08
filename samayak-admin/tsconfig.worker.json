@@ -16,6 +16,11 @@
     },
     "baseUrl": "."
   },
-  "include": ["workers/**/*.ts", "lib/**/*.ts", "prisma/**/*.ts", "scripts/generate-cse-seed.ts"],
+  "include": [
+    "workers/**/*.ts",
+    "lib/**/*.ts",
+    "prisma/**/*.ts",
+    "scripts/generate-cse-seed.ts"
+  ],
   "exclude": ["node_modules", ".next", "app"]
 }

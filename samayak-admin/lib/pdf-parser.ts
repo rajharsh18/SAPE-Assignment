@@ -43,7 +43,9 @@ export interface ParsedData {
 function isMeaningfulTimetableText(text: string): boolean {
   const trimmed = text.trim();
   if (trimmed.length < 80) return false;
-  const withoutPageMarkers = trimmed.replace(/--\s*\d+\s+of\s+\d+\s--/gi, "").trim();
+  const withoutPageMarkers = trimmed
+    .replace(/--\s*\d+\s+of\s+\d+\s--/gi, "")
+    .trim();
   if (withoutPageMarkers.length < 50) return false;
   return (
     /(?:MON|TUE|WED|THU|FRI|SAT|MONDAY|TUESDAY)/i.test(trimmed) ||
@@ -76,12 +78,15 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
 async function extractPdfTextViaPdfJs(buffer: Buffer): Promise<string> {
   try {
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise;
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer) })
+      .promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
       const content = await page.getTextContent();
-      text += content.items.map((item) => ("str" in item ? item.str : "")).join(" ") + "\n";
+      text +=
+        content.items.map((item) => ("str" in item ? item.str : "")).join(" ") +
+        "\n";
     }
     return text;
   } catch {
@@ -98,7 +103,12 @@ function isDayRow(line: string): string | null {
 }
 
 function isHeaderRow(line: string): boolean {
-  return /period/i.test(line) || /08:00/i.test(line) || /08:30/i.test(line) || /Period\s*I/i.test(line);
+  return (
+    /period/i.test(line) ||
+    /08:00/i.test(line) ||
+    /08:30/i.test(line) ||
+    /Period\s*I/i.test(line)
+  );
 }
 
 export function parseFromText(text: string): ParsedData {
@@ -130,7 +140,8 @@ export function parseFromText(text: string): ParsedData {
 
     if (
       !result.department &&
-      (/department|computer science|engineering/i.test(line) || /^CSE\b/i.test(line))
+      (/department|computer science|engineering/i.test(line) ||
+        /^CSE\b/i.test(line))
     ) {
       result.department = line
         .replace(/^department\s+of\s+/i, "")
@@ -164,17 +175,22 @@ export function parseFromText(text: string): ParsedData {
       let cells = remaining.split(/\t|\s{2,}|\|/).filter(Boolean);
 
       if (cells.length === 0) {
-        const bracketCells = line.match(/[^\t|]+?\([A-Za-z]{2,5}\d{1,4}[A-Za-z]?\)/gi);
+        const bracketCells = line.match(
+          /[^\t|]+?\([A-Za-z]{2,5}\d{1,4}[A-Za-z]?\)/gi,
+        );
         if (bracketCells) cells = bracketCells;
         else {
-          const legacyCells = line.match(/([A-Z]{2,}\d{3}[A-Z]?\s*[-/]\s*\S+)/gi);
+          const legacyCells = line.match(
+            /([A-Z]{2,}\d{3}[A-Z]?\s*[-/]\s*\S+)/gi,
+          );
           if (legacyCells) cells = legacyCells;
         }
       }
 
       for (let p = 0; p < cells.length && p < 9; p++) {
         const period = p + 1;
-        const { courseCode, courseName, roomId, facultyName } = parseCellContent(cells[p]);
+        const { courseCode, courseName, roomId, facultyName } =
+          parseCellContent(cells[p]);
 
         if (!courseCode && cells[p]?.trim()) {
           result.parseErrors.push({
@@ -194,7 +210,8 @@ export function parseFromText(text: string): ParsedData {
             });
           } else if (courseName && courseName !== courseCode) {
             const existing = result.courses.find(
-              (c) => c.code === courseCode && c.branchKey === currentBranch?.key
+              (c) =>
+                c.code === courseCode && c.branchKey === currentBranch?.key,
             );
             if (existing && existing.name === existing.code) {
               existing.name = courseName;
@@ -230,7 +247,9 @@ export function parseFromText(text: string): ParsedData {
   return result;
 }
 
-export async function parseTimetablePdfTextOnly(filePath: string): Promise<ParsedData | null> {
+export async function parseTimetablePdfTextOnly(
+  filePath: string,
+): Promise<ParsedData | null> {
   const buffer = fs.readFileSync(filePath);
 
   let text = await extractPdfText(buffer);
@@ -268,7 +287,9 @@ export async function parseTimetablePdf(filePath: string): Promise<ParsedData> {
   return visionParsed;
 }
 
-export async function parseTimetablePdfFromDir(dir: string): Promise<ParsedData[]> {
+export async function parseTimetablePdfFromDir(
+  dir: string,
+): Promise<ParsedData[]> {
   const files = fs
     .readdirSync(dir)
     .filter((f) => f.toLowerCase().endsWith(".pdf"))

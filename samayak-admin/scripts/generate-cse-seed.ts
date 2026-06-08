@@ -8,7 +8,10 @@ import { parseTimetablePdf } from "../lib/pdf-parser";
 import type { ParsedData } from "../lib/pdf-parser";
 import { isValidFacultyName } from "../lib/pdf-parser-utils";
 
-const ASSIGNMENT_ROOMS: Record<string, { capacity: number; type: "CLASSROOM" | "LAB" }> = {
+const ASSIGNMENT_ROOMS: Record<
+  string,
+  { capacity: number; type: "CLASSROOM" | "LAB" }
+> = {
   "219": { capacity: 60, type: "CLASSROOM" },
   "220": { capacity: 60, type: "CLASSROOM" },
   "233A": { capacity: 120, type: "CLASSROOM" },
@@ -48,7 +51,16 @@ function normalizeRoom(room: string): string | null {
   return null;
 }
 
-const GARBAGE_COURSE_CODES = new Set(["AB", "AL", "LAB", "AIML", "ES", "IR", "USL", "MAL"]);
+const GARBAGE_COURSE_CODES = new Set([
+  "AB",
+  "AL",
+  "LAB",
+  "AIML",
+  "ES",
+  "IR",
+  "USL",
+  "MAL",
+]);
 
 function isValidCourseCode(code: string): boolean {
   const c = code.trim().toUpperCase();
@@ -114,7 +126,9 @@ function toSeed(parsed: ParsedData) {
     .reduce(
       (acc, b) => {
         const group = branchGroupKey(b.code, b.semester);
-        let entry = acc.find((x) => x.code === b.code && x.semester === b.semester);
+        let entry = acc.find(
+          (x) => x.code === b.code && x.semester === b.semester,
+        );
         if (!entry) {
           entry = {
             name: BRANCH_NAMES[b.code] || b.name,
@@ -128,7 +142,12 @@ function toSeed(parsed: ParsedData) {
         if (!entry.sections.includes(sec)) entry.sections.push(sec);
         return acc;
       },
-      [] as Array<{ name: string; code: string; semester: number; sections: string[] }>
+      [] as Array<{
+        name: string;
+        code: string;
+        semester: number;
+        sections: string[];
+      }>,
     );
 
   for (const b of branches) {
@@ -151,7 +170,10 @@ function toSeed(parsed: ParsedData) {
       type: ASSIGNMENT_ROOMS[roomNumber].type,
     }));
 
-  const courseMeta = new Map<string, { code: string; name: string; credits: number; type: string }>();
+  const courseMeta = new Map<
+    string,
+    { code: string; name: string; credits: number; type: string }
+  >();
   for (const c of parsed.courses) {
     if (!isValidCourseCode(c.code)) continue;
     const type = inferCourseType(c.code);
@@ -178,7 +200,10 @@ function toSeed(parsed: ParsedData) {
     }
   }
 
-  const courses: Record<string, Array<{ code: string; name: string; credits: number; type: string }>> = {};
+  const courses: Record<
+    string,
+    Array<{ code: string; name: string; credits: number; type: string }>
+  > = {};
   for (const b of branches) {
     const group = branchGroupKey(b.code, b.semester);
     const codes = new Set<string>();
@@ -191,16 +216,23 @@ function toSeed(parsed: ParsedData) {
       void sec;
     }
     for (const s of parsed.slots) {
-      if (!s.branchKey || !s.courseCode || !isValidCourseCode(s.courseCode)) continue;
+      if (!s.branchKey || !s.courseCode || !isValidCourseCode(s.courseCode))
+        continue;
       const [code, semStr] = s.branchKey.split("-");
       if (code === b.code && parseInt(semStr, 10) === b.semester) {
         codes.add(s.courseCode);
       }
     }
     if (codes.size > 0) {
-      courses[group] = [...codes]
-        .sort()
-        .map((code) => courseMeta.get(code) || { code, name: code, credits: inferCredits(code, code), type: inferCourseType(code) });
+      courses[group] = [...codes].sort().map(
+        (code) =>
+          courseMeta.get(code) || {
+            code,
+            name: code,
+            credits: inferCredits(code, code),
+            type: inferCourseType(code),
+          },
+      );
     }
   }
 
@@ -208,7 +240,12 @@ function toSeed(parsed: ParsedData) {
   const facultyNames = new Map<string, string>();
 
   for (const s of parsed.slots) {
-    if (s.facultyName && s.courseCode && isValidFacultyName(s.facultyName) && isValidCourseCode(s.courseCode)) {
+    if (
+      s.facultyName &&
+      s.courseCode &&
+      isValidFacultyName(s.facultyName) &&
+      isValidCourseCode(s.courseCode)
+    ) {
       const email = facultyEmail(s.facultyName);
       facultyNames.set(email, s.facultyName.trim());
       if (!facultyCourseMap.has(email)) facultyCourseMap.set(email, new Set());
@@ -229,9 +266,18 @@ function toSeed(parsed: ParsedData) {
     courseCodes: [...(facultyCourseMap.get(email) || [])].sort(),
   }));
 
-  const timetables: Record<string, Array<{ day: string; period: number; courseCode: string; room: string }>> = {};
+  const timetables: Record<
+    string,
+    Array<{ day: string; period: number; courseCode: string; room: string }>
+  > = {};
   for (const s of parsed.slots) {
-    if (!s.branchKey || !s.courseCode || !s.roomId || !isValidCourseCode(s.courseCode)) continue;
+    if (
+      !s.branchKey ||
+      !s.courseCode ||
+      !s.roomId ||
+      !isValidCourseCode(s.courseCode)
+    )
+      continue;
     const room = normalizeRoom(s.roomId);
     if (!room || !isAllowedRoom(room)) continue;
 
@@ -248,22 +294,30 @@ function toSeed(parsed: ParsedData) {
   const assignmentBranches = branches.filter((b) => {
     const hasSlots = Object.keys(timetables).some((key) => {
       const [code, sem, sec] = key.split("-");
-      return code === b.code && parseInt(sem, 10) === b.semester && b.sections.includes(sec);
+      return (
+        code === b.code &&
+        parseInt(sem, 10) === b.semester &&
+        b.sections.includes(sec)
+      );
     });
     return hasSlots;
   });
 
-  const allowedBranchGroups = new Set(assignmentBranches.map((b) => branchGroupKey(b.code, b.semester)));
+  const allowedBranchGroups = new Set(
+    assignmentBranches.map((b) => branchGroupKey(b.code, b.semester)),
+  );
   const filteredCourses: typeof courses = {};
   for (const [k, v] of Object.entries(courses)) {
     if (allowedBranchGroups.has(k) && v.length > 0) filteredCourses[k] = v;
   }
 
-  const allAssignmentRooms = Object.entries(ASSIGNMENT_ROOMS).map(([roomNumber, meta]) => ({
-    roomNumber,
-    capacity: meta.capacity,
-    type: meta.type,
-  }));
+  const allAssignmentRooms = Object.entries(ASSIGNMENT_ROOMS).map(
+    ([roomNumber, meta]) => ({
+      roomNumber,
+      capacity: meta.capacity,
+      type: meta.type,
+    }),
+  );
 
   return {
     department: { name: "Computer Science & Engineering", code: "CSE" },
@@ -276,15 +330,14 @@ function toSeed(parsed: ParsedData) {
 }
 
 async function main() {
-  const pdfPath =
-    process.argv[2] || path.join(__dirname, "../../CSE(8).pdf");
+  const pdfPath = process.argv[2] || path.join(__dirname, "../../CSE(8).pdf");
   const outPath =
     process.argv[3] || path.join(__dirname, "../prisma/data/cse-seed.json");
 
   console.log(`Parsing: ${pdfPath}`);
   const parsed = await parseTimetablePdf(pdfPath);
   console.log(
-    `Method: ${parsed.parseMethod}, branches: ${parsed.branches.length}, slots: ${parsed.slots.length}, courses: ${parsed.courses.length}, faculty: ${parsed.faculty.length}`
+    `Method: ${parsed.parseMethod}, branches: ${parsed.branches.length}, slots: ${parsed.slots.length}, courses: ${parsed.courses.length}, faculty: ${parsed.faculty.length}`,
   );
 
   if (parsed.slots.length === 0 && parsed.courses.length === 0) {
@@ -296,7 +349,7 @@ async function main() {
   fs.writeFileSync(outPath, JSON.stringify(seed, null, 2) + "\n");
   console.log(`Wrote ${outPath}`);
   console.log(
-    `Branches: ${seed.branches.length}, rooms: ${seed.rooms.length}, faculty: ${seed.faculty.length}, timetable keys: ${Object.keys(seed.timetables).length}`
+    `Branches: ${seed.branches.length}, rooms: ${seed.rooms.length}, faculty: ${seed.faculty.length}, timetable keys: ${Object.keys(seed.timetables).length}`,
   );
 }
 

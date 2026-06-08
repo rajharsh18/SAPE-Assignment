@@ -20,13 +20,20 @@ interface MetricCardProps {
   live?: boolean;
 }
 
-export function MetricCard({ icon, label, value, sub, tone = "brand", live }: MetricCardProps) {
+export function MetricCard({
+  icon,
+  label,
+  value,
+  sub,
+  tone = "brand",
+  live,
+}: MetricCardProps) {
   return (
     <div className="card-hover flex items-start gap-4 rounded-2xl border border-border bg-surface-1 p-5">
       <div
         className={cn(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-          toneIconClass[tone]
+          toneIconClass[tone],
         )}
       >
         {icon}
@@ -35,7 +42,10 @@ export function MetricCard({ icon, label, value, sub, tone = "brand", live }: Me
         <div className="flex items-center gap-2">
           <p className="text-xs font-medium text-text-secondary">{label}</p>
           {live && (
-            <span className="h-2 w-2 rounded-full bg-success animate-pulse-glow" title="Live" />
+            <span
+              className="h-2 w-2 rounded-full bg-success animate-pulse-glow"
+              title="Live"
+            />
           )}
         </div>
         <p className="mt-1 text-[28px] font-bold leading-none tracking-tight text-text-primary">
@@ -53,14 +63,20 @@ interface WelcomeBannerProps {
   actions?: React.ReactNode;
 }
 
-export function WelcomeBanner({ title, subtitle, actions }: WelcomeBannerProps) {
+export function WelcomeBanner({
+  title,
+  subtitle,
+  actions,
+}: WelcomeBannerProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-text-primary">{title}</h1>
         <p className="mt-1 text-[13px] text-text-secondary">{subtitle}</p>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      )}
     </div>
   );
 }
@@ -75,8 +91,15 @@ export function ChartCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl border border-border bg-surface-1 p-6", className)}>
-      <h3 className="mb-5 text-[15px] font-semibold text-text-primary">{title}</h3>
+    <div
+      className={cn(
+        "rounded-2xl border border-border bg-surface-1 p-6",
+        className,
+      )}
+    >
+      <h3 className="mb-5 text-[15px] font-semibold text-text-primary">
+        {title}
+      </h3>
       {children}
     </div>
   );

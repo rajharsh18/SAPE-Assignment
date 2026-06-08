@@ -7,7 +7,11 @@ interface SearchBarProps extends InputHTMLAttributes<HTMLInputElement> {
   wrapperClassName?: string;
 }
 
-export function SearchBar({ className, wrapperClassName, ...props }: SearchBarProps) {
+export function SearchBar({
+  className,
+  wrapperClassName,
+  ...props
+}: SearchBarProps) {
   return (
     <div className={cn("relative w-full max-w-sm", wrapperClassName)}>
       <Search
@@ -20,7 +24,7 @@ export function SearchBar({ className, wrapperClassName, ...props }: SearchBarPr
           "w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-surface-1 border border-border text-text-primary",
           "placeholder:text-text-muted outline-none transition-colors",
           "focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20",
-          className
+          className,
         )}
         {...props}
       />

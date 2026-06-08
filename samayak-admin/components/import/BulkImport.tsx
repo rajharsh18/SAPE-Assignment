@@ -51,7 +51,8 @@ export function BulkImport({
       onDrop={(e) => {
         e.preventDefault();
         setDragOver(false);
-        if (!disabled && e.dataTransfer.files[0]) void handleFile(e.dataTransfer.files[0]);
+        if (!disabled && e.dataTransfer.files[0])
+          void handleFile(e.dataTransfer.files[0]);
       }}
       onClick={openPicker}
       className={cn(
@@ -59,7 +60,7 @@ export function BulkImport({
         dragOver
           ? "border-brand-secondary bg-brand-secondary/5"
           : "border-border bg-surface-2/50 hover:border-brand-primary/40",
-        (disabled || uploading) && "opacity-60 cursor-not-allowed"
+        (disabled || uploading) && "opacity-60 cursor-not-allowed",
       )}
     >
       <Upload size={32} className="mx-auto mb-3 text-text-muted" />
@@ -78,7 +79,12 @@ interface ImportReportProps {
   errors?: Array<{ row: number; reason: string }>;
 }
 
-export function ImportReport({ created, matched, failed, errors }: ImportReportProps) {
+export function ImportReport({
+  created,
+  matched,
+  failed,
+  errors,
+}: ImportReportProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
@@ -99,7 +105,10 @@ export function ImportReport({ created, matched, failed, errors }: ImportReportP
         <div className="p-4 rounded-[14px] bg-danger/5 border border-danger/10 max-h-48 overflow-auto">
           <p className="text-sm font-semibold text-danger mb-2">Parse Errors</p>
           {errors.map((err, i) => (
-            <p key={i} className="text-xs text-text-secondary py-1 border-b border-surface-3 last:border-0">
+            <p
+              key={i}
+              className="text-xs text-text-secondary py-1 border-b border-surface-3 last:border-0"
+            >
               <span className="font-medium">Row {err.row}:</span> {err.reason}
             </p>
           ))}

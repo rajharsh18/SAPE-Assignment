@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, ChevronDown, ChevronUp, XCircle, FileSearch } from "lucide-react";
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  XCircle,
+  FileSearch,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -25,7 +31,12 @@ interface OcrPageReviewProps {
   onIntegrateStart: () => void;
 }
 
-export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }: OcrPageReviewProps) {
+export function OcrPageReview({
+  jobId,
+  pages,
+  onPagesUpdated,
+  onIntegrateStart,
+}: OcrPageReviewProps) {
   const [expandedPage, setExpandedPage] = useState<number | null>(null);
   const [fullText, setFullText] = useState<Record<number, string>>({});
   const [loadingPage, setLoadingPage] = useState<number | null>(null);
@@ -38,10 +49,15 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
     if (fullText[pageNumber]) return;
     setLoadingPage(pageNumber);
     try {
-      const res = await fetch(`/api/pdf-ingestion/pages/${jobId}?page=${pageNumber}&full=1`);
+      const res = await fetch(
+        `/api/pdf-ingestion/pages/${jobId}?page=${pageNumber}&full=1`,
+      );
       if (!res.ok) throw new Error("Failed to load page text");
       const data = await res.json();
-      setFullText((prev) => ({ ...prev, [pageNumber]: data.ocrText || data.preview }));
+      setFullText((prev) => ({
+        ...prev,
+        [pageNumber]: data.ocrText || data.preview,
+      }));
     } catch {
       toast.error(`Could not load OCR text for page ${pageNumber}`);
     } finally {
@@ -98,7 +114,9 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
     }
     setIntegrating(true);
     try {
-      const res = await fetch(`/api/pdf-ingestion/integrate/${jobId}`, { method: "POST" });
+      const res = await fetch(`/api/pdf-ingestion/integrate/${jobId}`, {
+        method: "POST",
+      });
       if (!res.ok) {
         toast.error((await res.json()).error || "Failed to start import");
         setIntegrating(false);
@@ -119,9 +137,12 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
           <FileSearch size={20} className="text-brand-primary" />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-text-primary">Review Vision LLM Extraction — Page by Page</h3>
+          <h3 className="font-semibold text-text-primary">
+            Review Vision LLM Extraction — Page by Page
+          </h3>
           <p className="text-sm text-text-secondary mt-1">
-            Each page was read directly by a vision LLM (Groq). Confirm pages whose extracted JSON looks correct before importing.
+            Each page was read directly by a vision LLM (Groq). Confirm pages
+            whose extracted JSON looks correct before importing.
             <span className="ml-1 font-medium text-brand-primary">
               {confirmedCount}/{pages.length} confirmed
             </span>
@@ -156,7 +177,7 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
                 ? "border-success/40 bg-success/5"
                 : page.rejected
                   ? "border-border bg-surface-2 opacity-60"
-                  : "border-border bg-surface-1"
+                  : "border-border bg-surface-1",
             )}
           >
             <div className="flex items-center gap-3 p-3">
@@ -165,14 +186,17 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium">Page {page.pageNumber}</span>
+                  <span className="text-sm font-medium">
+                    Page {page.pageNumber}
+                  </span>
                   {page.branch && (
                     <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary">
                       {page.branch}
                     </span>
                   )}
                   <span className="text-[11px] text-text-muted">
-                    {page.charCount} chars • {page.slotsFound} slots • {page.coursesFound} courses
+                    {page.charCount} chars • {page.slotsFound} slots •{" "}
+                    {page.coursesFound} courses
                   </span>
                 </div>
                 <p className="text-xs text-text-secondary mt-1 line-clamp-2 font-mono">
@@ -190,7 +214,11 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
                   size="sm"
                   onClick={() => toggleExpand(page.pageNumber)}
                 >
-                  {expandedPage === page.pageNumber ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  {expandedPage === page.pageNumber ? (
+                    <ChevronUp size={14} />
+                  ) : (
+                    <ChevronDown size={14} />
+                  )}
                 </Button>
                 {!page.rejected && (
                   <Button
@@ -212,7 +240,12 @@ export function OcrPageReview({ jobId, pages, onPagesUpdated, onIntegrateStart }
                     variant="danger"
                     size="sm"
                     disabled={confirming}
-                    onClick={() => updatePage({ pageNumber: page.pageNumber, rejected: true })}
+                    onClick={() =>
+                      updatePage({
+                        pageNumber: page.pageNumber,
+                        rejected: true,
+                      })
+                    }
                   >
                     Skip
                   </Button>

@@ -10,7 +10,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, id, ...props }, ref) => (
     <div className="w-full">
       {label && (
-        <label htmlFor={id} className="block text-[13px] font-medium text-text-secondary mb-2">
+        <label
+          htmlFor={id}
+          className="block text-[13px] font-medium text-text-secondary mb-2"
+        >
           {label}
         </label>
       )}
@@ -22,13 +25,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           "placeholder:text-text-muted outline-none transition-colors",
           "focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20",
           error && "border-danger bg-danger/5",
-          className
+          className,
         )}
         {...props}
       />
-      {error && <p className="mt-1.5 text-xs text-danger font-medium">{error}</p>}
+      {error && (
+        <p className="mt-1.5 text-xs text-danger font-medium">{error}</p>
+      )}
     </div>
-  )
+  ),
 );
 Input.displayName = "Input";
 
@@ -40,7 +45,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, id, children, ...props }, ref) => (
     <div className="w-full">
       {label && (
-        <label htmlFor={id} className="block text-[13px] font-medium text-text-secondary mb-2">
+        <label
+          htmlFor={id}
+          className="block text-[13px] font-medium text-text-secondary mb-2"
+        >
           {label}
         </label>
       )}
@@ -50,14 +58,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         className={cn(
           "w-full px-4 py-3 rounded-xl text-sm bg-surface-1 border border-border text-text-primary outline-none",
           "focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20",
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </select>
     </div>
-  )
+  ),
 );
 Select.displayName = "Select";
 
@@ -77,7 +85,7 @@ export function SearchInput({ className, icon, ...props }: SearchInputProps) {
         className={cn(
           "w-full pl-10 pr-4 py-3 rounded-xl text-sm bg-surface-1 border border-border",
           "focus:border-brand-secondary focus:ring-2 focus:ring-brand-secondary/20 outline-none",
-          className
+          className,
         )}
         {...props}
       />

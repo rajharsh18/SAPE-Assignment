@@ -85,7 +85,7 @@ export function DataTable<T>({
                 "px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wide whitespace-nowrap",
                 col.align === "center" && "text-center",
                 col.align === "right" && "text-right",
-                (!col.align || col.align === "left") && "text-left"
+                (!col.align || col.align === "left") && "text-left",
               )}
             >
               {col.header}
@@ -120,7 +120,7 @@ export function DataTable<T>({
                   className={cn(
                     "px-4 py-3",
                     col.align === "center" && "text-center",
-                    col.align === "right" && "text-right"
+                    col.align === "right" && "text-right",
                   )}
                 >
                   {col.render(row, idx)}
@@ -136,7 +136,11 @@ export function DataTable<T>({
   return (
     <div className="bg-surface-1 rounded-2xl border border-border overflow-hidden">
       {maxHeight !== false ? (
-        <ScrollArea maxHeight={maxHeight} className="border-0 rounded-none" fade>
+        <ScrollArea
+          maxHeight={maxHeight}
+          className="border-0 rounded-none"
+          fade
+        >
           <div className="overflow-x-auto">{table}</div>
         </ScrollArea>
       ) : (
@@ -152,7 +156,11 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+export function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+}: PaginationProps) {
   if (totalPages <= 1) return null;
 
   return (
@@ -165,7 +173,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
             "min-w-[32px] h-8 px-2 rounded-[10px] text-xs font-semibold border cursor-pointer transition-colors",
             page === p
               ? "brand-gradient text-white border-transparent"
-              : "bg-surface-1 text-text-primary border-border hover:bg-surface-2"
+              : "bg-surface-1 text-text-primary border-border hover:bg-surface-2",
           )}
         >
           {p}

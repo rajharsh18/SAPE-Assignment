@@ -71,7 +71,10 @@ async function getRoomUtilisation() {
 
 async function getEmptyRoomProbability() {
   const totalRooms = await prisma.room.count();
-  const periods = Array.from({ length: TEACHING_PERIODS_PER_DAY }, (_, i) => i + 1);
+  const periods = Array.from(
+    { length: TEACHING_PERIODS_PER_DAY },
+    (_, i) => i + 1,
+  );
   const days = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
   // Batch query: count occupied slots grouped by period and day
@@ -158,7 +161,10 @@ async function getAvgEmptyRoomHours() {
 
   if (rooms.length === 0) {
     return {
-      dailyAvgs: days.map((day) => ({ day, avgEmptyHours: TEACHING_PERIODS_PER_DAY })),
+      dailyAvgs: days.map((day) => ({
+        day,
+        avgEmptyHours: TEACHING_PERIODS_PER_DAY,
+      })),
       overallAvg: TEACHING_PERIODS_PER_DAY,
     };
   }
@@ -168,8 +174,7 @@ async function getAvgEmptyRoomHours() {
       const occupied = room.slots.filter((s) => s.day === day).length;
       return (TEACHING_PERIODS_PER_DAY - occupied) * slotDuration;
     });
-    const avg =
-      emptyHoursPerRoom.reduce((a, b) => a + b, 0) / rooms.length;
+    const avg = emptyHoursPerRoom.reduce((a, b) => a + b, 0) / rooms.length;
     return { day, avgEmptyHours: Math.round(avg * 100) / 100 };
   });
 

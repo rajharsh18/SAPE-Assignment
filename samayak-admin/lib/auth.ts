@@ -31,7 +31,7 @@ export const authOptions: NextAuthOptions = {
 
         const isValid = await bcrypt.compare(
           credentials.password,
-          user.passwordHash
+          user.passwordHash,
         );
 
         if (!isValid) {
@@ -56,7 +56,11 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const u = user as unknown as { role: string; departmentId: string | null; departmentName: string | null };
+        const u = user as unknown as {
+          role: string;
+          departmentId: string | null;
+          departmentName: string | null;
+        };
         token.role = u.role;
         token.departmentId = u.departmentId;
         token.departmentName = u.departmentName;

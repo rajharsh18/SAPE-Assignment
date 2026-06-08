@@ -44,7 +44,7 @@ export async function proxy(req: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { error: "Unauthorized", correlationId },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -57,7 +57,7 @@ export async function proxy(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Forbidden", correlationId },
-        { status: 403 }
+        { status: 403 },
       );
     }
   }
@@ -70,8 +70,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/api/:path*",
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/api/:path*", "/((?!_next/static|_next/image|favicon.ico).*)"],
 };

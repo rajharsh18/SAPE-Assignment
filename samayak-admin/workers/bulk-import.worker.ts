@@ -18,7 +18,10 @@ interface BulkImportJobData {
   fileType: "CSV" | "EXCEL";
 }
 
-function parseFile(filePath: string, fileType: string): Record<string, string>[] {
+function parseFile(
+  filePath: string,
+  fileType: string,
+): Record<string, string>[] {
   const buffer = fs.readFileSync(filePath);
 
   if (fileType === "CSV") {
@@ -46,7 +49,9 @@ function parseFile(filePath: string, fileType: string): Record<string, string>[]
 }
 
 async function importDepartments(rows: Record<string, string>[]) {
-  let created = 0, matched = 0, failed = 0;
+  let created = 0,
+    matched = 0,
+    failed = 0;
   const errors: Array<{ row: number; reason: string }> = [];
 
   for (let i = 0; i < rows.length; i++) {
@@ -65,7 +70,10 @@ async function importDepartments(rows: Record<string, string>[]) {
           where: { code: row.parentcode || row.parent_code || "" },
         });
         if (!dept) {
-          errors.push({ row: i + 1, reason: `Parent department not found: ${row.parentcode}` });
+          errors.push({
+            row: i + 1,
+            reason: `Parent department not found: ${row.parentcode}`,
+          });
           failed++;
           continue;
         }
@@ -99,7 +107,9 @@ async function importDepartments(rows: Record<string, string>[]) {
 }
 
 async function importRooms(rows: Record<string, string>[]) {
-  let created = 0, matched = 0, failed = 0;
+  let created = 0,
+    matched = 0,
+    failed = 0;
   const errors: Array<{ row: number; reason: string }> = [];
 
   for (let i = 0; i < rows.length; i++) {
@@ -109,7 +119,10 @@ async function importRooms(rows: Record<string, string>[]) {
         where: { code: row.departmentcode || row.department_code || "" },
       });
       if (!dept) {
-        errors.push({ row: i + 1, reason: `Department not found: ${row.departmentcode}` });
+        errors.push({
+          row: i + 1,
+          reason: `Department not found: ${row.departmentcode}`,
+        });
         failed++;
         continue;
       }
@@ -119,7 +132,9 @@ async function importRooms(rows: Record<string, string>[]) {
       const type = (row.type || "CLASSROOM").toUpperCase() as RoomType;
 
       const existing = await prisma.room.findUnique({
-        where: { departmentId_roomNumber: { departmentId: dept.id, roomNumber } },
+        where: {
+          departmentId_roomNumber: { departmentId: dept.id, roomNumber },
+        },
       });
 
       if (existing) {
@@ -147,7 +162,9 @@ async function importRooms(rows: Record<string, string>[]) {
 }
 
 async function importCourses(rows: Record<string, string>[]) {
-  let created = 0, matched = 0, failed = 0;
+  let created = 0,
+    matched = 0,
+    failed = 0;
   const errors: Array<{ row: number; reason: string }> = [];
 
   for (let i = 0; i < rows.length; i++) {
@@ -162,7 +179,10 @@ async function importCourses(rows: Record<string, string>[]) {
       });
 
       if (!branch) {
-        errors.push({ row: i + 1, reason: `Branch not found: ${branchCode} Sem ${semester}` });
+        errors.push({
+          row: i + 1,
+          reason: `Branch not found: ${branchCode} Sem ${semester}`,
+        });
         failed++;
         continue;
       }
@@ -195,7 +215,9 @@ async function importCourses(rows: Record<string, string>[]) {
 }
 
 async function importFaculty(rows: Record<string, string>[]) {
-  let created = 0, matched = 0, failed = 0;
+  let created = 0,
+    matched = 0,
+    failed = 0;
   const errors: Array<{ row: number; reason: string }> = [];
 
   for (let i = 0; i < rows.length; i++) {
@@ -222,7 +244,12 @@ async function importFaculty(rows: Record<string, string>[]) {
           data: {
             name,
             email,
-            role: role as "ADMIN" | "COORDINATOR" | "PROFESSOR" | "HOD" | "DEAN",
+            role: role as
+              | "ADMIN"
+              | "COORDINATOR"
+              | "PROFESSOR"
+              | "HOD"
+              | "DEAN",
             departmentId,
           },
         });
@@ -258,7 +285,12 @@ export async function processBulkImport(job: Job<BulkImportJobData>) {
       data: { status: "INTEGRATING" },
     });
 
-    let result: { created: number; matched: number; failed: number; errors: Array<{ row: number; reason: string }> };
+    let result: {
+      created: number;
+      matched: number;
+      failed: number;
+      errors: Array<{ row: number; reason: string }>;
+    };
 
     switch (entityType) {
       case "departments":

@@ -41,7 +41,7 @@ export function Badge({ variant = "brand", children, className }: BadgeProps) {
       className={cn(
         "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
         variantClass[variant],
-        className
+        className,
       )}
     >
       {children}

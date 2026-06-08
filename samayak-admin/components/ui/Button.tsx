@@ -13,7 +13,8 @@ const variants: Record<ButtonVariant, string> = {
   secondary:
     "bg-surface-1 text-text-primary border border-border hover:bg-surface-2",
   utility: "bg-text-primary text-white border-none hover:opacity-90",
-  ghost: "bg-transparent text-brand-primary border border-border hover:bg-surface-3",
+  ghost:
+    "bg-transparent text-brand-primary border border-border hover:bg-surface-3",
   danger: "bg-danger/10 text-danger border border-danger/20 hover:bg-danger/15",
 };
 
@@ -24,7 +25,17 @@ const sizes = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", disabled, children, ...props }, ref) => (
+  (
+    {
+      className,
+      variant = "primary",
+      size = "md",
+      disabled,
+      children,
+      ...props
+    },
+    ref,
+  ) => (
     <button
       ref={ref}
       disabled={disabled}
@@ -32,12 +43,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "inline-flex items-center justify-center font-semibold transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed",
         variants[variant],
         sizes[size],
-        className
+        className,
       )}
       {...props}
     >
       {children}
     </button>
-  )
+  ),
 );
 Button.displayName = "Button";

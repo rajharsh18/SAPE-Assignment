@@ -6,7 +6,10 @@ import {
   type ParsedBranch,
   type ParsedData,
 } from "../lib/pdf-parser";
-import { isValidFacultyName, splitFacultyNames as splitCellFacultyNames } from "../lib/pdf-parser-utils";
+import {
+  isValidFacultyName,
+  splitFacultyNames as splitCellFacultyNames,
+} from "../lib/pdf-parser-utils";
 import { visionPdfPages, parseFromVisionPages } from "../lib/pdf-vision-parser";
 import type { OcrPageResult, PdfJobMetadata } from "../lib/pdf-job-metadata";
 
@@ -19,7 +22,7 @@ const redis = new IORedis(process.env.REDIS_URL!, {
 function logJob(
   importJobId: string,
   message: string,
-  extra?: Record<string, unknown>
+  extra?: Record<string, unknown>,
 ) {
   const suffix = extra ? ` ${JSON.stringify(extra)}` : "";
   console.log(`[pdf-ingestion][${importJobId}] ${message}${suffix}`);
@@ -68,7 +71,10 @@ function normalizeDeptLabel(label: string): string {
   return trimmed;
 }
 
-function extractDepartmentFromName(raw: string): { name: string; dept: string | null } {
+function extractDepartmentFromName(raw: string): {
+  name: string;
+  dept: string | null;
+} {
   let name = raw.trim();
   let dept: string | null = null;
 
@@ -76,7 +82,10 @@ function extractDepartmentFromName(raw: string): { name: string; dept: string | 
   let bracketMatch: RegExpExecArray | null;
   const bracketSegments: Array<{ full: string; content: string }> = [];
   while ((bracketMatch = bracketRegex.exec(name)) !== null) {
-    bracketSegments.push({ full: bracketMatch[0], content: bracketMatch[1].trim() });
+    bracketSegments.push({
+      full: bracketMatch[0],
+      content: bracketMatch[1].trim(),
+    });
   }
   for (const { full, content } of bracketSegments) {
     if (isTutorialGroup(content)) {
@@ -127,8 +136,11 @@ function nameToEmail(name: string): string {
 
 function normalizeFacultyList(
   raw: string[],
-  fallbackDepartment: string
-): { faculty: Array<{ name: string; department: string }>; primaryDepartment: string } {
+  fallbackDepartment: string,
+): {
+  faculty: Array<{ name: string; department: string }>;
+  primaryDepartment: string;
+} {
   const seen = new Map<string, { name: string; department: string }>();
   let primaryDepartment = fallbackDepartment;
 
@@ -138,7 +150,10 @@ function normalizeFacultyList(
       const { name, dept } = extractDepartmentFromName(piece);
       if (!name || !isValidFacultyName(name)) continue;
       const department = dept || fallbackDepartment;
-      if (dept && (!primaryDepartment || /computer science/i.test(primaryDepartment))) {
+      if (
+        dept &&
+        (!primaryDepartment || /computer science/i.test(primaryDepartment))
+      ) {
         // Prefer a department explicitly mentioned alongside a name if we only
         // have the generic CSE default so far.
         primaryDepartment = dept;
@@ -154,12 +169,19 @@ function normalizeFacultyList(
 async function integrateParsedData(
   parsed: ParsedData,
   importJobId: string,
-  job: Job
-): Promise<{ created: number; matched: number; failed: number; errors: Array<{ row: number; reason: string }> }> {
+  job: Job,
+): Promise<{
+  created: number;
+  matched: number;
+  failed: number;
+  errors: Array<{ row: number; reason: string }>;
+}> {
   let created = 0;
   let matched = 0;
   let failed = 0;
-  const errors: Array<{ row: number; reason: string }> = [...parsed.parseErrors];
+  const errors: Array<{ row: number; reason: string }> = [
+    ...parsed.parseErrors,
+  ];
 
   logJob(importJobId, "Integrating parsed data into database", {
     branches: parsed.branches.length,
@@ -182,12 +204,11 @@ async function integrateParsedData(
       .map((s) => s.facultyName)
       .filter((n): n is string => Boolean(n)),
   ];
-  const { faculty: normalizedFaculty, primaryDepartment } = normalizeFacultyList(
-    facultySources,
-    parsed.department
-  );
+  const { faculty: normalizedFaculty, primaryDepartment } =
+    normalizeFacultyList(facultySources, parsed.department);
 
-  const effectiveDepartmentName = primaryDepartment || parsed.department || "Unknown Department";
+  const effectiveDepartmentName =
+    primaryDepartment || parsed.department || "Unknown Department";
 
   const deptCode =
     effectiveDepartmentName
@@ -403,7 +424,10 @@ async function integrateParsedData(
     const email = nameToEmail(name);
 
     let facultyDeptId = department.id;
-    if (facultyDeptName && facultyDeptName.toLowerCase() !== department.name.toLowerCase()) {
+    if (
+      facultyDeptName &&
+      facultyDeptName.toLowerCase() !== department.name.toLowerCase()
+    ) {
       const cacheKey = facultyDeptName.toLowerCase();
       const cached = facultyDeptCache.get(cacheKey);
       if (cached) {
@@ -514,7 +538,9 @@ async function runVisionAndIntegrate(job: Job) {
   });
 
   if (pages.length === 0) {
-    throw new Error("Vision pipeline produced no pages — check that pdftoppm is installed");
+    throw new Error(
+      "Vision pipeline produced no pages — check that pdftoppm is installed",
+    );
   }
 
   pages.forEach((p) => {
@@ -526,7 +552,7 @@ async function runVisionAndIntegrate(job: Job) {
 
   if (parsed.slots.length === 0 && parsed.courses.length === 0) {
     throw new Error(
-      "Vision LLM completed but no timetable data could be extracted from this PDF."
+      "Vision LLM completed but no timetable data could be extracted from this PDF.",
     );
   }
 
@@ -569,7 +595,10 @@ export async function processPdfIngestion(job: Job) {
       await prisma.importJob.update({
         where: { id: importJobId },
         data: {
-          metadata: { filePath, parseMethod: "text" } as unknown as Prisma.InputJsonValue,
+          metadata: {
+            filePath,
+            parseMethod: "text",
+          } as unknown as Prisma.InputJsonValue,
         },
       });
       await job.updateProgress(40);

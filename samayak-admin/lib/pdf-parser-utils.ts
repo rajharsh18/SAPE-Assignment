@@ -2,7 +2,10 @@ export const TEACHING_PERIODS_PER_DAY = 9;
 
 export const LUNCH_BREAK = { start: "12:50", end: "13:30" };
 
-export const PERIOD_TIMES_EXPORT: Record<number, { start: string; end: string }> = {
+export const PERIOD_TIMES_EXPORT: Record<
+  number,
+  { start: string; end: string }
+> = {
   1: { start: "08:00", end: "08:50" },
   2: { start: "09:00", end: "09:50" },
   3: { start: "10:00", end: "10:50" },
@@ -15,7 +18,16 @@ export const PERIOD_TIMES_EXPORT: Record<number, { start: string; end: string }>
 };
 
 const ROMAN_MAP: Record<string, number> = {
-  I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10,
+  I: 1,
+  II: 2,
+  III: 3,
+  IV: 4,
+  V: 5,
+  VI: 6,
+  VII: 7,
+  VIII: 8,
+  IX: 9,
+  X: 10,
 };
 
 const FACULTY_SPLIT_REGEX = /\s+(?:and|&)\s+|\s*[,;]\s*/i;
@@ -23,7 +35,11 @@ const SINGLE_FACULTY_BLOCK =
   /^(?:Dr|Prof|Mr|Ms|Mrs)\.?\s+(?:(?:[A-Z]\.\s*){0,5}[A-Za-z]+)(?:\s*\([^)]+\))?/i;
 const BRACKETED_CODE_RE = /\(([A-Za-z0-9]+)\)/g;
 
-export function branchKey(code: string, semester: number, section: string | null): string {
+export function branchKey(
+  code: string,
+  semester: number,
+  section: string | null,
+): string {
   return `${code}-${semester}-${section || "A"}`;
 }
 
@@ -50,7 +66,8 @@ export function splitFacultyNames(raw: string): string[] {
 
 function parseRoomFromLine(line: string): string | null {
   const trimmed = line.trim();
-  if (!trimmed || /^break$/i.test(trimmed) || /^lunch$/i.test(trimmed)) return null;
+  if (!trimmed || /^break$/i.test(trimmed) || /^lunch$/i.test(trimmed))
+    return null;
   if (/\b(?:dr|prof|mr|ms|mrs)\.?\b/i.test(trimmed)) return null;
 
   const labMatch = trimmed.match(/^lab\s*\d+/i);
@@ -116,15 +133,20 @@ function parseLegacyCodeLine(mainPart: string): {
   const dashMatch = mainPart.match(/^([A-Z]{2,}\d{0,4}[A-Z]?)\s*[-/]\s*(.+)/i);
   if (dashMatch) {
     const courseCode = dashMatch[1].trim().toUpperCase();
-    if (!isCourseCodeToken(courseCode)) return { courseCode: null, roomId: null };
-    const roomId = dashMatch[2].trim().replace(/\s*\(.*/, "").split(/[\s,/]/)[0];
+    if (!isCourseCodeToken(courseCode))
+      return { courseCode: null, roomId: null };
+    const roomId = dashMatch[2]
+      .trim()
+      .replace(/\s*\(.*/, "")
+      .split(/[\s,/]/)[0];
     return { courseCode, roomId };
   }
 
   const codeMatch = mainPart.match(/^([A-Z]{2,}\d{0,4}[A-Z]?)/i);
   if (codeMatch) {
     const courseCode = codeMatch[1].toUpperCase();
-    if (!isCourseCodeToken(courseCode)) return { courseCode: null, roomId: null };
+    if (!isCourseCodeToken(courseCode))
+      return { courseCode: null, roomId: null };
     return { courseCode, roomId: null };
   }
 
@@ -145,10 +167,18 @@ export function parseCellContent(cell: string): {
     /^lunch$/i.test(trimmed) ||
     /^NC$/i.test(trimmed)
   ) {
-    return { courseCode: null, courseName: null, roomId: null, facultyName: null };
+    return {
+      courseCode: null,
+      courseName: null,
+      roomId: null,
+      facultyName: null,
+    };
   }
 
-  const lines = trimmed.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
+  const lines = trimmed
+    .split(/[\n\r]+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
   const facultyParts: string[] = [];
   let courseCode: string | null = null;
   let courseName: string | null = null;
@@ -166,7 +196,7 @@ export function parseCellContent(cell: string): {
     courseName = peeled.courseName || null;
 
     const roomAfter = parseRoomFromLine(
-      bracketed.after.replace(/^[/-]\s*/, "").trim()
+      bracketed.after.replace(/^[/-]\s*/, "").trim(),
     );
     if (roomAfter) roomId = roomAfter;
     break;
