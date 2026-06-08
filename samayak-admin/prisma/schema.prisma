@@ -1,0 +1,162 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  COORDINATOR
+  PROFESSOR
+  HOD
+  DEAN
+}
+
+enum RoomType {
+  CLASSROOM
+  LAB
+  OTHER
+}
+
+enum CourseType {
+  LECTURE
+  LAB
+  TUTORIAL
+}
+
+enum ImportStatus {
+  QUEUED
+  PARSING
+  OCR_REVIEW
+  INTEGRATING
+  DONE
+  FAILED
+}
+
+// ─── Core Entities ────────────────────────────────────────────
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches Branch[]
+  rooms    Room[]
+  faculty  User[]
+  courses  Course[]
+
+  @@index([code])
+}
+
+model Branch {
+  id           String @id @default(cuid())
+  name         String
+  code         String
+  departmentId String
+  semester     Int
+  section      String?
+
+  department Department @relation(fields: [departmentId], references: [id])
+  courses    Course[]
+
+  @@unique([departmentId, code, semester, section])
+  @@index([departmentId])
+}
+
+model Room {
+  id           String   @id @default(cuid())
+  roomNumber   String
+  departmentId String
+  capacity     Int
+  type         RoomType @default(CLASSROOM)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id])
+  slots      TimeSlot[]
+
+  @@unique([departmentId, roomNumber])
+  @@index([departmentId])
+}
+
+model Course {
+  id           String     @id @default(cuid())
+  code         String
+  name         String
+  credits      Int // 0 allowed — flagged in dashboard
+  type         CourseType @default(LECTURE)
+  departmentId String
+  branchId     String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id])
+  branch     Branch     @relation(fields: [branchId], references: [id])
+  slots      TimeSlot[]
+  faculty    User[]
+
+  @@unique([code, branchId])
+  @@index([departmentId, branchId])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String?
+  role         Role      @default(PROFESSOR)
+  departmentId String?
+  deletedAt    DateTime? // soft delete
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  courses    Course[]
+
+  @@index([email])
+  @@index([departmentId])
+  @@index([deletedAt])
+}
+
+// ─── Timetable ────────────────────────────────────────────────
+
+model TimeSlot {
+  id        String  @id @default(cuid())
+  day       String // MON, TUE, WED, THU, FRI, SAT
+  period    Int // 1–9 (Period I through IX)
+  startTime String // "08:30"
+  endTime   String // "09:30"
+  courseId   String?
+  roomId    String?
+
+  course Course? @relation(fields: [courseId], references: [id])
+  room   Room?   @relation(fields: [roomId], references: [id])
+
+  @@index([roomId, day])
+  @@index([courseId])
+}
+
+// ─── Import Jobs ──────────────────────────────────────────────
+
+model ImportJob {
+  id           String       @id @default(cuid())
+  type         String // "PDF" | "CSV" | "EXCEL"
+  status       ImportStatus @default(QUEUED)
+  fileName     String
+  createdCount Int          @default(0)
+  matchedCount Int          @default(0)
+  failedCount  Int          @default(0)
+  errors       Json? // array of { row, reason }
+  metadata     Json? // OCR pages, filePath, parseMethod
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
