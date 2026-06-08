@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "baseUrl": "."
+  },
+  "include": ["workers/**/*.ts", "lib/**/*.ts", "prisma/**/*.ts", "scripts/generate-cse-seed.ts"],
+  "exclude": ["node_modules", ".next", "app"]
+}
