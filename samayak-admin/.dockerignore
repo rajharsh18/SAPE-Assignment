@@ -8,4 +8,3 @@ dist
 docker-compose.yml
 Dockerfile
 Dockerfile.worker
-.env*

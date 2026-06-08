@@ -29,7 +29,7 @@ services:
     env_file: .env
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
-      - redis_data:/data
+      - ../data/redis:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -96,9 +96,6 @@ services:
       NODE_ENV: production
     ports:
       - "0.0.0.0:3001:3000"
-
-volumes:
-  redis_data:
 
 networks:
   default:
