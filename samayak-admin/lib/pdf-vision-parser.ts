@@ -8,7 +8,6 @@ import type { ParsedBranch, ParsedData, ParsedSlot } from "./pdf-parser";
 import {
   branchKey,
   PERIOD_TIMES_EXPORT as PERIOD_TIMES,
-  isCourseCodeToken,
   isValidFacultyName,
   splitFacultyNames,
 } from "./pdf-parser-utils";
@@ -21,12 +20,18 @@ const DEFAULT_GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const VALID_DAYS = new Set(["MON", "TUE", "WED", "THU", "FRI", "SAT"]);
 const DAY_MAP: Record<string, string> = {
-  MON: "MON", MONDAY: "MON",
-  TUE: "TUE", TUESDAY: "TUE",
-  WED: "WED", WEDNESDAY: "WED",
-  THU: "THU", THURSDAY: "THU",
-  FRI: "FRI", FRIDAY: "FRI",
-  SAT: "SAT", SATURDAY: "SAT",
+  MON: "MON",
+  MONDAY: "MON",
+  TUE: "TUE",
+  TUESDAY: "TUE",
+  WED: "WED",
+  WEDNESDAY: "WED",
+  THU: "THU",
+  THURSDAY: "THU",
+  FRI: "FRI",
+  FRIDAY: "FRI",
+  SAT: "SAT",
+  SATURDAY: "SAT",
 };
 
 interface VisionSlot {
@@ -42,7 +47,12 @@ interface VisionSlot {
 
 interface VisionPayload {
   department?: string;
-  branches?: Array<{ code?: string; name?: string; semester?: number; section?: string }>;
+  branches?: Array<{
+    code?: string;
+    name?: string;
+    semester?: number;
+    section?: string;
+  }>;
   rooms?: string[];
   courses?: Array<{ code?: string; name?: string; branchCode?: string }>;
   faculty?: string[];
@@ -66,7 +76,10 @@ export async function isPopplerAvailable(): Promise<boolean> {
   return commandExists("pdftoppm");
 }
 
-async function convertPdfToPngs(pdfPath: string, outDir: string): Promise<string[]> {
+async function convertPdfToPngs(
+  pdfPath: string,
+  outDir: string,
+): Promise<string[]> {
   const prefix = path.join(outDir, "page");
   // 200 dpi: good readability for vision models, keeps PNGs ~300-500 KB so they fit
   // comfortably under Groq's per-image base64 limit.
@@ -87,7 +100,13 @@ function normalizeDay(day: string): string | null {
 function normalizeBranchCode(raw: string): string {
   const code = raw.toUpperCase().replace(/[^A-Z]/g, "");
   if (code === "CSE") return "CS";
+  if (code === "AIML" || code === "AI") return "AIML";
+  if (code === "MCA") return "MCA";
   return code || "CS";
+}
+
+function isCourseCodeToken(token: string): boolean {
+  return /^[A-Z]{2,4}\d{3,6}L?$/.test(token);
 }
 
 const SYSTEM_PROMPT = `You are an expert at reading university timetable PDF pages.
@@ -122,14 +141,26 @@ Rules:
 - Read the timetable grid row by row. Each row is a day, each column is a period.
 - Skip cells that say BREAK, LUNCH, NC, or are empty.
 - BIT Mesra format: faculty name(s) appear BEFORE the course title. Multiple faculty on one cell means co-teaching.
-- The course CODE is inside parentheses after the title, e.g. "Compiler Design (CS601)" → code=CS601, name="Compiler Design" (NOT the title as the code).
+- The course CODE is inside parentheses after the title, e.g. "Compiler Design (CS601)" → code=CS601, name="Compiler Design". NEVER use the course title as the code.
 - Faculty may be on line(s) above the course line, or on the same line before the title, e.g. "Dr. A and Dr. B Compiler Design (CS601)".
 - Room number or lab is usually on the line below the course, or after / following the bracket.
 - Ignore faculty strings that contain only punctuation/symbols with no letters.
-- Legacy format "CS333/219" is also valid.
-- If a cell shows a lab like "Networks Lab (CS611L) Lab 3", code=CS611L, roomId=Lab 3.
+- Legacy format "CS333/219" means courseCode=CS333, roomId=219.
+- If a cell shows a lab like "Networks Lab (CS611L) Lab 3", code=CS611L, roomId="Lab 3".
 - Tie every slot back to the branch header above its table.
-- If the page is not a timetable (cover, syllabus list, etc.), still extract courses/faculty you see, return empty slots.
+
+IMPORTANT — branch codes used in this PDF:
+  - CS   (B.Tech Computer Science, all semesters and sections)
+  - AIML (B.Tech AI & ML, and M.Tech AIML)
+  - MCA  (MCA programme)
+  Use the EXACT code from the page header "Branch:" field.
+
+IMPORTANT — course code prefixes used in this PDF:
+  CS, AI, CA, MA, MT, HS, IT, MC, AI (for AIML courses)
+  Preserve these prefixes exactly as printed inside the parentheses.
+  Examples: CS333, AI303, CA413, MA24201, MT133, HS24211, IT349, MC300, CS630, AI601.
+
+- If the page is not a timetable (cover, syllabus list, etc.), still extract courses/faculty you see, but return an empty slots array.
 - Output ONLY the JSON object. No commentary.`;
 
 function extractJson(text: string): VisionPayload | null {
@@ -149,7 +180,7 @@ async function callGroqVision(pngPath: string): Promise<VisionPayload | null> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "GROQ_API_KEY is not set. Add it to the worker environment to enable vision-based PDF parsing."
+      "GROQ_API_KEY is not set. Add it to the worker environment to enable vision-based PDF parsing.",
     );
   }
 
@@ -160,7 +191,7 @@ async function callGroqVision(pngPath: string): Promise<VisionPayload | null> {
 
   const body = {
     model,
-    temperature: 0.05,
+    temperature: 0.02,
     max_tokens: 4096,
     response_format: { type: "json_object" as const },
     messages: [
@@ -186,7 +217,9 @@ async function callGroqVision(pngPath: string): Promise<VisionPayload | null> {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`Groq vision call failed (${res.status}): ${errText.slice(0, 400)}`);
+    throw new Error(
+      `Groq vision call failed (${res.status}): ${errText.slice(0, 400)}`,
+    );
   }
 
   const json = (await res.json()) as {
@@ -199,7 +232,7 @@ async function callGroqVision(pngPath: string): Promise<VisionPayload | null> {
 
 function visionPayloadToParsed(
   payload: VisionPayload,
-  currentBranch: ParsedBranch | null
+  currentBranch: ParsedBranch | null,
 ): {
   parsed: ParsedData;
   primaryBranch: ParsedBranch | null;
@@ -244,7 +277,9 @@ function visionPayloadToParsed(
   for (const s of payload.slots || []) {
     if (!s.day || !s.period || !s.courseCode) continue;
     const courseCode = s.courseCode.toUpperCase().trim();
+
     if (!isCourseCodeToken(courseCode)) continue;
+
     const day = normalizeDay(s.day);
     const period = Math.min(9, Math.max(1, Number(s.period) || 0));
     if (!day || period < 1) continue;
@@ -293,7 +328,9 @@ function visionPayloadToParsed(
     branches,
     rooms: (payload.rooms || []).map((r) => String(r).trim()).filter(Boolean),
     courses,
-    faculty: (payload.faculty || []).map((f) => String(f).trim()).filter(Boolean),
+    faculty: (payload.faculty || [])
+      .map((f) => String(f).trim())
+      .filter(Boolean),
     slots,
     parseErrors: [],
     parseMethod: "vision",
@@ -309,16 +346,20 @@ function summarizeBranch(branch: ParsedBranch | null): string | null {
 
 export async function visionPdfPages(
   filePath: string,
-  onPageComplete?: (page: OcrPageResult, index: number, total: number) => Promise<void>
+  onPageComplete?: (
+    page: OcrPageResult,
+    index: number,
+    total: number,
+  ) => Promise<void>,
 ): Promise<{ pages: OcrPageResult[]; pagePayloads: VisionPayload[] }> {
   if (!(await isPopplerAvailable())) {
     throw new Error(
-      "Vision PDF parsing requires poppler-utils (pdftoppm). Run via the Docker worker image."
+      "Vision PDF parsing requires poppler-utils (pdftoppm). Run via the Docker worker image.",
     );
   }
   if (!process.env.GROQ_API_KEY) {
     throw new Error(
-      "GROQ_API_KEY is not set on the worker. Add it to docker-compose env to enable vision parsing."
+      "GROQ_API_KEY is not set on the worker. Add it to docker-compose env to enable vision parsing.",
     );
   }
 
@@ -342,7 +383,10 @@ export async function visionPdfPages(
       }
 
       const safePayload = payload ?? {};
-      const { parsed, primaryBranch } = visionPayloadToParsed(safePayload, currentBranch);
+      const { parsed, primaryBranch } = visionPayloadToParsed(
+        safePayload,
+        currentBranch,
+      );
       if (primaryBranch) currentBranch = primaryBranch;
 
       pagePayloads.push(safePayload);
@@ -350,7 +394,9 @@ export async function visionPdfPages(
       const rawJson = JSON.stringify(safePayload, null, 2);
       const page: OcrPageResult = {
         pageNumber,
-        ocrText: errorReason ? `[vision error] ${errorReason}\n\n${rawJson}` : rawJson,
+        ocrText: errorReason
+          ? `[vision error] ${errorReason}\n\n${rawJson}`
+          : rawJson,
         charCount: rawJson.length,
         preview: errorReason
           ? `Vision error: ${errorReason.slice(0, 200)}`
@@ -393,10 +439,14 @@ export function mergeVisionPayloads(payloads: VisionPayload[]): ParsedData {
   let currentBranch: ParsedBranch | null = null;
 
   for (const payload of payloads) {
-    const { parsed, primaryBranch } = visionPayloadToParsed(payload, currentBranch);
+    const { parsed, primaryBranch } = visionPayloadToParsed(
+      payload,
+      currentBranch,
+    );
     if (primaryBranch) currentBranch = primaryBranch;
 
-    if (!merged.department && parsed.department) merged.department = parsed.department;
+    if (!merged.department && parsed.department)
+      merged.department = parsed.department;
 
     for (const b of parsed.branches) {
       if (!branchSet.has(b.key)) {
@@ -422,7 +472,10 @@ export function mergeVisionPayloads(payloads: VisionPayload[]): ParsedData {
   merged.faculty = Array.from(facultySet);
   if (!merged.department) merged.department = "Computer Science & Engineering";
 
-  if (merged.branches.length === 0 && (merged.slots.length > 0 || merged.courses.length > 0)) {
+  if (
+    merged.branches.length === 0 &&
+    (merged.slots.length > 0 || merged.courses.length > 0)
+  ) {
     const fallback: ParsedBranch = {
       name: "Computer Science",
       code: "CS",
@@ -472,7 +525,9 @@ export async function parsePdfViaVision(filePath: string): Promise<ParsedData> {
       courses: [],
       faculty: [],
       slots: [],
-      parseErrors: [{ row: 0, reason: `Vision pipeline failed: ${(err as Error).message}` }],
+      parseErrors: [
+        { row: 0, reason: `Vision pipeline failed: ${(err as Error).message}` },
+      ],
       parseMethod: "vision",
     };
   }
