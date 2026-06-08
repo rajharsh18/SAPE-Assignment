@@ -43,7 +43,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     <aside
       className={cn(
         "sidebar-shell fixed top-0 bottom-0 z-50 flex w-[280px] flex-col transition-transform duration-300 ease-out lg:translate-x-0",
-        open ? "translate-x-0" : "-translate-x-full"
+        open ? "translate-x-0" : "-translate-x-full",
       )}
     >
       <div className="flex items-center gap-3 border-b border-white/10 px-6 pb-5 pt-6">
@@ -66,7 +66,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </svg>
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-bold tracking-tight text-white">Samayak</h1>
+          <h1 className="text-lg font-bold tracking-tight text-white">
+            Samayak
+          </h1>
           <p className="text-[11px] font-medium text-white/50">Admin Panel</p>
         </div>
         <button
@@ -95,7 +97,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 "mb-0.5 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm no-underline transition-all duration-150",
                 active
                   ? "bg-white/15 font-semibold text-white"
-                  : "font-normal text-white/70 hover:bg-white/[0.08] hover:text-white"
+                  : "font-normal text-white/70 hover:bg-white/8 hover:text-white",
               )}
             >
               <Icon size={18} />
@@ -116,7 +118,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               {session?.user?.name || "Admin"}
             </p>
             <p className="truncate text-[11px] text-white/50">
-              {((session?.user as Record<string, unknown>)?.role as string) || "ADMIN"}
+              {((session?.user as Record<string, unknown>)?.role as string) ||
+                "ADMIN"}
             </p>
           </div>
           <button

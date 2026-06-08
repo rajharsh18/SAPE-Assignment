@@ -18,7 +18,13 @@ const sizes = {
   lg: "max-w-2xl",
 };
 
-export function Modal({ open, onClose, title, children, size = "md" }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  size = "md",
+}: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -35,7 +41,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -44,14 +50,17 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
       <div
         className={cn(
           "relative w-full bg-surface-1 rounded-2xl p-6 shadow-lg border border-border animate-fade-in",
-          sizes[size]
+          sizes[size],
         )}
         role="dialog"
         aria-modal
         aria-labelledby="modal-title"
       >
         <div className="flex items-center justify-between mb-5">
-          <h3 id="modal-title" className="text-base font-semibold text-text-primary">
+          <h3
+            id="modal-title"
+            className="text-base font-semibold text-text-primary"
+          >
             {title}
           </h3>
           <button
