@@ -59,9 +59,6 @@ A **Use Demo Login** button is available on the login page.
 ```
 SAPE-Assignment/
 ├── README.md                 ← This file (setup & overview)
-├── data/                     ← Docker volume data (gitignored)
-│   ├── postgres/             ← PostgreSQL data
-│   └── uploads/              ← Uploaded PDFs / import files
 └── samayak-admin/            ← Next.js application
     ├── app/                  ← Pages & API routes (App Router)
     ├── components/           ← UI, layout, tables, import, analytics
